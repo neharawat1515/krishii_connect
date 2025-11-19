@@ -40,7 +40,7 @@ const LanguageSelector = () => {
               key={lang.code}
               onClick={() => {
                 setSelectedLanguage(lang.code);
-                speak('Language selected');
+                setTimeout(() => speak(t('languageSelected')), 100);
               }}
               className={`p-4 rounded-xl border-2 transition-all transform hover:scale-105 ${
                 selectedLanguage === lang.code
@@ -58,8 +58,8 @@ const LanguageSelector = () => {
             <button
               onClick={() => {
                 setUserType('farmer');
-                setCurrentPage('farmerDashboard');
-                speak('Farmer dashboard');
+                setCurrentPage('login');
+                speak(t('login'));
               }}
               className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all"
             >
@@ -69,8 +69,8 @@ const LanguageSelector = () => {
             <button
               onClick={() => {
                 setUserType('buyer');
-                setCurrentPage('buyerDashboard');
-                speak('Buyer dashboard');
+                setCurrentPage('login');
+                speak(t('login'));
               }}
               className="w-full py-4 bg-white border-2 border-green-600 text-green-700 rounded-xl font-bold text-lg hover:bg-green-50 transition-all"
             >

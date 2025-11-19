@@ -1,0 +1,200 @@
+import React, { useState } from 'react';
+import { User, Phone, MapPin, Eye, EyeOff, Store, ArrowLeft } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
+import { getTranslation } from '../utils/translations';
+import { useVoiceGuidance } from './VoiceGuidance';
+
+const Register = () => {
+  const { selectedLanguage, setCurrentPage, userType, setFormData } = useAppContext();
+  const [showPassword, setShowPassword] = useState(false);
+  const [formValues, setFormValues] = useState({
+    name: '', phone: '', location: '', password: '', businessType: ''
+  });
+  const { speak } = useVoiceGuidance();
+
+  const t = (key) => getTranslation(key, selectedLanguage);
+
+  const handleRegister = (e) => {
+    e.preventDefault();
+    
+    setFormData(formValues);
+    speak(selectedLanguage === 'hi' 
+      ? 'रजिस्ट्रेशन सफल! अब आप लॉगिन कर सकते हैं।' 
+      : 'Registration successful! You can now login.');
+    
+    setTimeout(() => setCurrentPage('login'), 2000);
+  };
+
+  const voicePrompts = {
+    name: selectedLanguage === 'hi' 
+      ? (userType === 'farmer' ? 'कृपया अपना पूरा नाम दर्ज करें' : 'कृपया अपने व्यवसाय का नाम दर्ज करें')
+      : (userType === 'farmer' ? 'Please enter your full name' : 'Please enter your business name'),
+    
+    phone: selectedLanguage === 'hi' 
+      ? 'कृपया अपना 10 अंकों का मोबाइल नंबर दर्ज करें' 
+      : 'Please enter your 10 digit mobile number',
+    
+    location: selectedLanguage === 'hi' 
+      ? (userType === 'farmer' ? 'कृपया अपने गाँव का नाम दर्ज करें' : 'कृपया अपने व्यवसाय का स्थान दर्ज करें')
+      : (userType === 'farmer' ? 'Please enter your village name' : 'Please enter your business location'),
+    
+    businessType: selectedLanguage === 'hi' 
+      ? 'कृपया अपने व्यवसाय का प्रकार चुनें' 
+      : 'Please select your business type',
+    
+    password: selectedLanguage === 'hi' 
+      ? 'कृपया एक मजबूत पासवर्ड बनाएं। कम से कम 6 अक्षर का।' 
+      : 'Please create a strong password. At least 6 characters.'
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 py-8 px-4">
+      <div className="max-w-md mx-auto">
+        <div className="bg-white rounded-3xl shadow-2xl p-8">
+          <button 
+            onClick={() => {
+              setCurrentPage('language');
+              speak(selectedLanguage === 'hi' ? 'वापस जा रहे हैं' : 'Going back');
+            }}
+            className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-800"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            {t('back')}
+          </button>
+
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">
+              {userType === 'farmer' ? t('farmerReg') : t('buyerReg')}
+            </h2>
+          </div>
+
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="flex items-center gap-2 text-gray-700 font-semibold mb-2">
+                <User className="w-5 h-5 text-green-600" />
+                {userType === 'farmer' ? t('yourName') : t('businessName')}
+              </label>
+              <input
+                type="text"
+                value={formValues.name}
+                onChange={(e) => setFormValues({...formValues, name: e.target.value})}
+                onFocus={() => speak(voicePrompts.name)}
+                onClick={() => speak(voicePrompts.name)}
+                className="w-full px-4 py-3 border-2 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100"
+                placeholder={selectedLanguage === 'hi' ? 'नाम दर्ज करें' : 'Enter name'}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 text-gray-700 font-semibold mb-2">
+                <Phone className="w-5 h-5 text-green-600" />
+                {t('mobile')}
+              </label>
+              <input
+                type="tel"
+                value={formValues.phone}
+                onChange={(e) => setFormValues({...formValues, phone: e.target.value})}
+                onFocus={() => speak(voicePrompts.phone)}
+                onClick={() => speak(voicePrompts.phone)}
+                className="w-full px-4 py-3 border-2 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100"
+                placeholder="9876543210"
+                pattern="[0-9]{10}"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 text-gray-700 font-semibold mb-2">
+                <MapPin className="w-5 h-5 text-green-600" />
+                {t('location')}
+              </label>
+              <input
+                type="text"
+                value={formValues.location}
+                onChange={(e) => setFormValues({...formValues, location: e.target.value})}
+                onFocus={() => speak(voicePrompts.location)}
+                onClick={() => speak(voicePrompts.location)}
+                className="w-full px-4 py-3 border-2 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100"
+                placeholder={selectedLanguage === 'hi' ? 'स्थान दर्ज करें' : 'Enter location'}
+                required
+              />
+            </div>
+
+            {userType === 'buyer' && (
+              <div>
+                <label className="flex items-center gap-2 text-gray-700 font-semibold mb-2">
+                  <Store className="w-5 h-5 text-green-600" />
+                  {t('businessType')}
+                </label>
+                <select
+                  value={formValues.businessType}
+                  onChange={(e) => setFormValues({...formValues, businessType: e.target.value})}
+                  onFocus={() => speak(voicePrompts.businessType)}
+                  onClick={() => speak(voicePrompts.businessType)}
+                  className="w-full px-4 py-3 border-2 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100"
+                  required
+                >
+                  <option value="">{t('selectType')}</option>
+                  <option value="retailer">{t('retailer')}</option>
+                  <option value="wholesaler">{t('wholesaler')}</option>
+                  <option value="restaurant">{t('restaurant')}</option>
+                  <option value="exporter">{t('exporter')}</option>
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label className="flex items-center gap-2 text-gray-700 font-semibold mb-2">
+                <Eye className="w-5 h-5 text-green-600" />
+                {t('password')}
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={formValues.password}
+                  onChange={(e) => setFormValues({...formValues, password: e.target.value})}
+                  onFocus={() => speak(voicePrompts.password)}
+                  onClick={() => speak(voicePrompts.password)}
+                  className="w-full px-4 py-3 border-2 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 pr-12"
+                  placeholder={selectedLanguage === 'hi' ? 'पासवर्ड बनाएं' : 'Create password'}
+                  minLength="6"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              onMouseEnter={() => speak(selectedLanguage === 'hi' ? 'रजिस्टर बटन' : 'Register button')}
+              className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold shadow-xl"
+            >
+              {t('register')}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <button 
+              onClick={() => {
+                setCurrentPage('login');
+                speak(selectedLanguage === 'hi' ? 'लॉगिन पेज खुल रहा है' : 'Opening login page');
+              }} 
+              className="text-green-600 font-semibold"
+            >
+              {t('alreadyAccount')}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Register;
