@@ -3,42 +3,65 @@ import { X } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { getTranslation } from '../utils/translations';
 import { useVoiceGuidance } from './VoiceGuidance';
+import { productAPI } from '../services/api'; // ADDED productAPI import
 
 const ProductManagement = ({ isOpen, onClose }) => {
-  const { products, setProducts, formData, selectedLanguage } = useAppContext();
+  const { products, setProducts, formData, selectedLanguage, setLoading } = useAppContext(); // Destructured setLoading
   const { speak } = useVoiceGuidance();
   const [newProduct, setNewProduct] = useState({
     name: '', price: '', quantity: '', quality: ''
   });
+  const [error, setError] = useState(''); // Added error state
 
   const t = (key) => getTranslation(key, selectedLanguage);
 
-  const addProduct = () => {
+  const addProduct = async () => { // Made function asynchronous
     if (!newProduct.name || !newProduct.price) {
-      speak(selectedLanguage === 'hi' ? 'कृपया सभी फ़ील्ड भरें' : 'Please fill all fields');
+      const msg = selectedLanguage === 'hi' ? 'कृपया सभी फ़ील्ड भरें' : 'Please fill all fields';
+      speak(msg);
+      setError(msg); // Set error state
       return;
     }
 
-    const product = {
-      id: Date.now(),
-      name: newProduct.name,
-      nameHi: newProduct.name,
-      namePa: newProduct.name,
-      nameBn: newProduct.name,
-      price: parseInt(newProduct.price),
-      unit: 'quintal',
-      stock: parseInt(newProduct.quantity) || 100,
-      emoji: '🌾',
-      quality: newProduct.quality || 'A Grade',
-      farmer: formData.name || 'You',
-      location: formData.location || 'Your Farm',
-      rating: 4.5
-    };
+    try {
+      setLoading(true); // Set loading state
 
-    setProducts([...products, product]);
-    setNewProduct({ name: '', price: '', quantity: '', quality: '' });
-    onClose();
-    speak(selectedLanguage === 'hi' ? 'उत्पाद जोड़ा गया' : 'Product added successfully');
+      const productData = {
+        name: newProduct.name,
+        nameHi: newProduct.name,
+        namePa: newProduct.name,
+        nameBn: newProduct.name,
+        price: parseInt(newProduct.price),
+        stock: parseInt(newProduct.quantity) || 100,
+        quality: newProduct.quality || 'A Grade',
+        emoji: '🌾',
+        // Optional fields from old code that might be needed by the backend:
+        unit: 'quintal', 
+        farmer: formData.name || 'You',
+        location: formData.location || 'Your Farm',
+        rating: 4.5
+      };
+
+      // Call backend API
+      const response = await productAPI.create(productData);
+      
+      // Update state with the product data returned from the backend (which includes _id)
+      setProducts([...products, response.data]); 
+      setNewProduct({ name: '', price: '', quantity: '', quality: '' });
+      setError(''); // Clear error on success
+      onClose();
+      
+      speak(selectedLanguage === 'hi' ? 'उत्पाद जोड़ा गया' : 'Product added successfully');
+    } catch (error) {
+      console.error('Error adding product:', error);
+      const errorMsg = selectedLanguage === 'hi' 
+        ? 'उत्पाद जोड़ने में त्रुटि' 
+        : 'Error adding product';
+      setError(errorMsg); // Set error message from API call
+      speak(errorMsg);
+    } finally {
+      setLoading(false); // Clear loading state
+    }
   };
 
   if (!isOpen) return null;
@@ -56,6 +79,12 @@ const ProductManagement = ({ isOpen, onClose }) => {
 
         {/* Form */}
         <div className="p-6 space-y-5">
+          {error && ( // Display error message
+            <div className="p-3 bg-red-100 text-red-700 rounded-lg font-medium">
+              {error}
+            </div>
+          )}
+          
           <div>
             <label className="block text-gray-700 font-semibold mb-2 text-sm">
               {t('productName')}
